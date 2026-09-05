@@ -1,0 +1,95 @@
+# 품질 업무 자동화 — 설정 (SPEC §2)
+# 이 파일을 config.yaml 로 복사해서 쓴다. 경로는 실제 PC 기준으로 고칠 것.
+
+site:
+  현장명:   '인천 영종하늘도시 A16BL 공동주택 신축공사'
+  공사명_시험: '영종하늘 A16BL 공공지원 민간임대주택 신축공사'   # 601/613 일지 2행
+  약칭:     '다인영종'
+
+paths:
+  quality_root:   'C:\Users\us\Desktop\품질_전체'
+  backup_root:    'C:\Users\us\Desktop\개인\클로드 자동 연동'
+  photo_inbox:    'C:\Users\us\Desktop\사진_품질_임시'
+  photo_sort_root: 'C:\Users\us\Desktop\사진분류'          # PART 3 입력 루트
+  photo_backup_root: 'C:\Users\us\Desktop\사진백업'         # PART 3 원본 보관
+  state_dir:      'C:\Users\us\Desktop\개인\클로드 자동 연동\상태'
+
+files:
+  supply_check:   '{quality_root}\G. 자재\03. 자재검수요청서\★수불부 체크용.xlsx'
+  request_cover:  '{quality_root}\G. 자재\03. 자재검수요청서\자재검수요청서 갑지.xlsx'
+  ledger_phc:     '{quality_root}\G. 자재\04. 자재수불부\JQC304-A 자재수불부(PHC파일).xlsx'
+  photo_sheet:    '{quality_root}\G. 자재\03. 자재검수요청서\자재검수 사진대지.xlsx'
+  photo_template: '{photo_inbox}\자재반입 송장 사진대지_양식.xlsx'
+
+  # --- PART 2: 시험 ---
+  test_shape:     '{quality_root}\Q. 각종시험\601. PHC파일 겉모양,치수 검사 작업일지.xlsx'
+  test_milk:      '{quality_root}\Q. 각종시험\612. PHC파일 밀크 시험일지.xls'      # 레거시 .xls
+  test_bscw_jsp:  '{quality_root}\Q. 각종시험\613. BSCW, JSP 시험일지.xlsx'
+  ledger_pile:    '{quality_root}\P. 감리단\03,04. 품질시험 검사대장(건축,토목,의뢰시험)\Q-01,02 품질검사 실시대장(파일).xls'
+  ledger_civil:   '{quality_root}\P. 감리단\03,04. 품질시험 검사대장(건축,토목,의뢰시험)\Q-03-품질검사 실시대장(토목).xls'
+  ledger_outsrc:  '{quality_root}\P. 감리단\03,04. 품질시험 검사대장(건축,토목,의뢰시험)\N-02. 품질검사 실시대장(의뢰시험).xls'
+
+test_rules:
+  phc_shape:                    # T-03 겉모양·치수 (§16.0)
+    on_first_delivery: true     # 업체별 최초 반입 시 1회
+    threshold_bon: 200          # 이후 마지막 시험 이래 누적 200본 초과 시마다 1회
+    warn_at_bon: 180            # 노란 예고 시작점
+    refresh_at: '07:00'         # 프로그램이 켜져 있을 때 자동 재판정 시각
+  phc_milk:                     # T-04 밀크 (§17.0)
+    per_week: 3                 # 주 3회 목표. 요일 고정 아님 — 카운터만 표시
+    week_starts: monday
+  compressive:                  # T-05 BSCW/JSP (§18)
+    days_7: 7
+    days_28: 28
+    criterion_mpa: 1.5
+    round_digits: 2             # §18.3 소수 2자리로 통일
+
+people:
+  담당자:        이승현
+  현장대리인:    이용택
+  품질관리기술인: 윤재웅          # 시험일지·실시대장 서명란
+  감리원_건축:   [김운종, 박기원]
+  감리원_토목:   [김남일]
+  총괄감리원:    김번환
+
+# 업체명 표기 계열 5종 (§4.3). 직접 대입 금지 — 반드시 이 표를 거친다.
+vendor_alias:
+  KCC:          {체크용: 'KCC',          갑지: '㈜KCC 글라스',   수불부: 'KCC글라스',    시험601: '㈜KCC글라스',    대장: 'KCC글라스'}
+  한국파일:     {체크용: '한국파일',     갑지: '㈜한국파일',     수불부: '한국파일',     시험601: '한국파일㈜',     대장: '한국파일'}
+  아주산업:     {체크용: '아주산업',     갑지: '아주산업㈜',     수불부: '아주산업',     시험601: '아주산업㈜',     대장: '아주산업'}
+  동양파일:     {체크용: '동양파일',     갑지: '동양파일㈜',     수불부: '동양파일',     시험601: '동양파일㈜',     대장: '동양파일'}
+  동진파일:     {체크용: '동진파일',     갑지: '동진파일㈜',     수불부: '동진파일',     시험601: '동진파일㈜',     대장: '동진파일'}
+  삼일씨엔에스: {체크용: '삼일씨엔에스', 갑지: '㈜삼일씨엔에스', 수불부: '삼일 C&S',     시험601: '㈜삼일C&S',      대장: '삼일C&S'}
+  아이에스동서: {체크용: '아이에스동서', 갑지: '아이에스동서㈜', 수불부: '아이에스동서', 시험601: '아이에스동서㈜', 대장: '아이에스동서'}
+  유정산업:     {체크용: '유정산업',     갑지: '유정산업㈜',     수불부: '유정산업',     시험601: '유정산업㈜',     대장: '유정산업'}
+
+# --- PART 3 사진 분류기 (§24.2) ---
+photo:
+  max_edge: 1600
+  jpeg_quality: 85
+  backup_keep_days: 30
+  ignore_names: ['Thumbs.db', 'desktop.ini', '.DS_Store']
+  extensions: ['.jpg', '.jpeg', '.png', '.heic', '.heif']
+  categories:
+    - {name: 자재검수,    dest: '{quality_root}\00. 사진관리\자재검수\01.PHC파일',            folder_fmt: '%m%d',   require_sub: false}
+    - {name: PHC_겉모양,  dest: '{quality_root}\Q. 각종시험\01.02 PHC파일 관련\1. 겉모양치수', folder_fmt: '%Y%m%d', require_sub: false}
+    - {name: 시료채취,    dest: '{quality_root}\Q. 각종시험\사진\시료채취',                    folder_fmt: '%Y%m%d', require_sub: false}
+    - {name: 물시멘트비,  dest: '{quality_root}\Q. 각종시험\01.02 PHC파일 관련\2. 물시멘트비_사진', folder_fmt: null, require_sub: true}
+    - {name: BSCW,        dest: '{quality_root}\Q. 각종시험\03. 토목가시설 관련\BSCW',          folder_fmt: null,     require_sub: true}
+    - {name: JSP,         dest: '{quality_root}\Q. 각종시험\03. 토목가시설 관련\JSP',           folder_fmt: null,     require_sub: true}
+
+# 구버전 사진 분류 대상 (§6.3) — inbox 최상위 파일을 카테고리로 보내는 단순 이동
+photo_categories:
+  - {label: '자재검수 / PHC파일', dest: '{quality_root}\00. 사진관리\자재검수\01.PHC파일'}
+  - {label: '자재검수 / 레미콘',  dest: '{quality_root}\00. 사진관리\레미콘'}
+  - {label: '송장 (자재수불부)',  dest: '{quality_root}\G. 자재\04. 자재수불부\송장_파일', date_fmt: '%Y%m%d'}
+  - {label: '시험기기',           dest: '{quality_root}\L. 시험기자재'}
+  - {label: 'PHC 불량자재',       dest: '{quality_root}\M. 부적합'}
+
+defaults:
+  채취장소:     '야적장'
+  밀크_시공업체: '이산지반건설'
+  밀크_채취장소: '현장 내'
+  토목_시공업체: '한성토건'
+  토목_채취장소: '현장 내'
+  첨부물:       '■ 출하송장, ■ 사진대지 등'
