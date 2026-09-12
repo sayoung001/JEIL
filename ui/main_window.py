@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QHeaderView,
                                QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget)
 
 from core.backup import BackupManager
-from core.config import Config
+from core.config import Config, check_paths
 from core.consistency import ConsistencyChecker
 from core.context import TaskResult
 from core.due_checker import DueChecker
@@ -43,6 +43,7 @@ class MainWindow(QMainWindow):
         self.resize(1280, 800)
 
         self._build_ui()
+        self._warn_if_paths_broken()
         self.refresh_alerts()
 
         # 매일 07:00 자동 재판정 (§16.0). 프로그램이 꺼져 있었으면 다음 실행 때 갱신된다.
@@ -90,6 +91,12 @@ class MainWindow(QMainWindow):
         row.addWidget(refresh)
         row.addWidget(check)
         lv.addLayout(row)
+
+        paths = QPushButton("경로 확인")
+        paths.setToolTip("이 PC 에서 어느 폴더·파일을 보고 있는지 확인합니다.\n"
+                         "다른 PC 로 옮겼을 때 가장 먼저 눌러 보세요.")
+        paths.clicked.connect(self.show_paths)
+        lv.addWidget(paths)
         splitter.addWidget(left)
 
         # --- 중: 입력 영역 ---
@@ -316,6 +323,36 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "되돌리기 완료",
                                 "\n".join(f"복원: {p.name}" for p in restored))
         self.refresh_alerts()
+
+    # -- 경로 확인 (PC 가 바뀌었을 때) ---------------------------------------
+    def show_paths(self) -> None:
+        lines, problems = check_paths(self.cfg)
+        box = QMessageBox(self)
+        box.setWindowTitle("경로 확인")
+        if problems:
+            box.setIcon(QMessageBox.Warning)
+            box.setText(f"찾지 못한 경로가 {len(problems)}건 있습니다.\n"
+                        f"설정 파일을 고치세요:\n{self.cfg.source}")
+            box.setInformativeText(problems[0].splitlines()[0])
+        else:
+            box.setIcon(QMessageBox.Information)
+            box.setText("모든 경로를 찾았습니다. 바로 쓸 수 있습니다.")
+        box.setDetailedText("\n".join(lines) + "\n\n■ 문제\n"
+                            + ("\n".join(f"- {p}" for p in problems) or "없음"))
+        box.exec()
+
+    def _warn_if_paths_broken(self) -> None:
+        """품질 폴더를 못 찾으면 시작하자마자 알린다. 빈 화면으로 헤매지 않게."""
+        _, problems = check_paths(self.cfg)
+        root = next((c for c in self.cfg.path_choices if c.key == "quality_root"), None)
+        if root is not None and not root.존재:
+            QMessageBox.warning(
+                self, "품질 폴더를 찾을 수 없습니다",
+                f"이 PC 에서 품질 폴더를 찾지 못했습니다.\n\n"
+                f"찾아본 곳:\n" + "\n".join(f"  · {c}" for c in root.후보)
+                + f"\n\n설정 파일의 paths.quality_root 에 이 PC 의 경로를 추가하세요:\n"
+                f"{self.cfg.source}\n\n"
+                "자세한 내용은 [경로 확인] 버튼을 누르세요.")
 
     # -- 정합성 검사 (§21.3) -----------------------------------------------
     def run_consistency(self) -> None:

@@ -12,11 +12,11 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from core.context import TaskContext
 from core.engines import RowGroupWriter, SheetCloneWriter
 from core.ledger import LedgerEntry, LedgerTemplate, LedgerWriter
+from core.paths import resource
 from core.models import MilkTest, Series
 from core.numbering import 대장_구분표기, 시험번호, 판정표기
 from core.sheets import col_index
@@ -154,8 +154,7 @@ class PhcMilkTask(Task):
 
     # -- 4. 실시대장 (h=2, L만 행별) --------------------------------------
     def _write_ledger(self, data: MilkTest, ctx: TaskContext) -> None:
-        tpl = LedgerTemplate.load(
-            Path(__file__).resolve().parent.parent / "templates" / "현장시험" / "PHC밀크.yaml")
+        tpl = LedgerTemplate.load(resource("templates", "현장시험", "PHC밀크.yaml"))
         writer = LedgerWriter(ctx.book("ledger_pile"), tpl)
         r1, r2 = data.결과들
         writer.append(LedgerEntry(

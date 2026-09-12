@@ -18,16 +18,70 @@ Windows 데스크톱 프로그램.
 
 ```bat
 실행.bat                :: 첫 실행 시 가상환경·의존성 자동 설치 후 GUI
-현황확인.bat            :: 엑셀을 띄우지 않고 현황·판정·정합성만 출력
+현황확인.bat            :: 엑셀을 띄우지 않고 경로·현황·판정·정합성 출력
+경로확인.bat            :: 이 PC 에서 어느 폴더를 보고 있는지만 빠르게
 build.bat               :: dist\품질자동화.exe 생성
 ```
 
-`config.example.yaml` 을 `config.yaml` 로 복사해 **경로·인명·업체 별칭**을 실제 PC 에 맞춘다.
+`config.yaml` 은 없으면 프로그램이 `config.example.yaml` 에서 자동으로 만든다.
+만든 뒤 **경로·인명·업체 별칭**을 그 PC 에 맞게 확인하면 된다.
+
+## ★ 만드는 PC 와 쓰는 PC 가 다를 때
+
+exe 는 노트북에서 만들고 회사 PC 에서 돌린다. 품질 폴더 위치가 서로 다르므로
+**경로를 exe 안에 굳히지 않는다.** 실행할 때마다 exe 옆 `config.yaml` 에서 읽는다.
+
+### 경로는 PC 별 후보를 적어 둔다
+
+```yaml
+paths:
+  quality_root:
+    - 'C:\Users\us\Desktop\품질_전체'   # 회사 PC
+    - 'E:\품질_전체'                       # 노트북
+```
+
+위에서부터 찾아 **그 PC 에 실제로 있는 것**을 고른다. 파일 하나로 두 PC 를 모두 쓴다.
+
+| 규칙 | 동작 |
+|---|---|
+| 1순위 | 실제로 존재하는 첫 후보 |
+| 2순위 | 없으면, 상위 폴더가 있는 첫 후보 (아직 안 만든 백업 폴더 등) |
+| 3순위 | 그것도 없으면 마지막 후보 |
+| 덮어쓰기 | 환경변수 `QUALITY_ROOT` 가 있으면 후보보다 먼저 |
+| `{app_dir}` | 프로그램(exe)이 놓인 폴더. 어느 PC 에든 있으므로 마지막 후보로 안전하다 |
+
+### 회사 PC 로 옮기는 순서
+
+1. 노트북에서 `build.bat` → `dist\품질자동화.exe`
+2. **exe 하나만** 회사 PC 로 복사 (다른 파일 필요 없음 — 자원은 exe 안에 들어 있다)
+3. 처음 실행하면 옆에 `config.yaml` 이 자동으로 생긴다
+4. 프로그램의 **[경로 확인]** 버튼을 눌러 전부 `O` 인지 본다
+5. `X` 가 있으면 `config.yaml` 의 해당 경로를 그 PC 기준으로 고친다
+
+경로가 안 맞아 GUI 가 안 뜨면 명령 프롬프트에서:
+
+```bat
+품질자동화.exe --paths
+```
+
+### exe 안 / exe 옆
+
+`--onefile` 은 실행할 때마다 임시 폴더에 풀렸다가 **끝나면 지워진다.**
+그래서 남아야 하는 것은 전부 exe 옆에 둔다.
+
+| 위치 | 무엇이 | 성질 |
+|---|---|---|
+| **exe 안** (`sys._MEIPASS`) | `workflows/`, `templates/`, `config.example.yaml` | 읽기 전용. 실행이 끝나면 사라진다 |
+| **exe 옆** (`sys.executable` 폴더) | `config.yaml`, `state.json`, `logs/` | 사람이 고치고, 다음 실행까지 남는다 |
+
+`core/paths.py` 가 이 둘을 갈라 준다. `templates\현장시험\새시험.yaml` 을 **exe 옆에**
+같은 경로로 두면 exe 를 다시 만들지 않고도 항목을 추가할 수 있다 (옆이 안보다 우선).
 
 ## CLI
 
 ```bash
 python main.py            # GUI
+python main.py --paths    # 이 PC 에서 어느 폴더·파일을 보고 있는지 (경로 문제 1순위)
 python main.py --dump     # 세 파일의 최신 차수·블록 열·누계 출력 (읽기 전용)
 python main.py --check    # 시험 도래 판정 (배지 내용)
 python main.py --verify   # 정합성 검사 (§21.3)
@@ -48,6 +102,7 @@ python main.py --verify   # 정합성 검사 (§21.3)
 | `core/due_checker.py` | 겉모양 200본 판정 · 밀크 주간 카운터 · BSCW/JSP 미완료 (§16.0 §17.0 §18.2) |
 | `core/consistency.py` | 상시 정합성 검사기 (§21.3) |
 | `core/dump.py` | `--dump` 현황 출력 (§12 §22) |
+| `core/paths.py` | exe 안 / exe 옆 구분. 만든 PC 와 쓰는 PC 가 다른 문제를 여기서 흡수 |
 | `tasks/` | T-01 · T-03 · T-04 · T-05 · 사진대지 · 사진분류 |
 | `templates/` | 실시대장 항목 템플릿 YAML — **새 시험은 코드가 아니라 여기에 추가** |
 | `ui/` | PySide6 화면 (태스크 목록 / 입력 / 워크플로우 패널) |
@@ -74,7 +129,7 @@ python main.py --verify   # 정합성 검사 (§21.3)
 ## 테스트
 
 ```bash
-python -m pytest tests -q      # Excel 없이 104개 전부 통과
+python -m pytest tests -q      # Excel 없이 122개 전부 통과
 ```
 
 무엇을 검증하는지:

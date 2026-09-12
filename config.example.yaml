@@ -1,5 +1,14 @@
 # 품질 업무 자동화 — 설정 (SPEC §2)
-# 이 파일을 config.yaml 로 복사해서 쓴다. 경로는 실제 PC 기준으로 고칠 것.
+#
+# 이 파일을 config.yaml 로 복사해서 쓴다. exe 는 자기 옆의 config.yaml 을 읽는다
+# (없으면 이 예시에서 자동으로 만들어 준다).
+#
+# ★ PC 마다 경로가 다르면 목록으로 적는다. 실행하는 PC 에 실제로 있는 것을 골라 쓴다.
+#   덕분에 노트북에서 빌드한 exe 를 회사 PC 에 그대로 복사해도 그대로 돌아간다.
+#   {app_dir} 는 프로그램(exe)이 놓인 폴더다. 어느 PC 에든 있으므로
+#   백업처럼 "없으면 만들면 되는" 폴더의 마지막 후보로 두면 안전하다.
+#
+#   확인: 프로그램의 [경로 확인] 버튼, 또는  품질자동화.exe --paths
 
 site:
   현장명:   '인천 영종하늘도시 A16BL 공동주택 신축공사'
@@ -7,12 +16,35 @@ site:
   약칭:     '다인영종'
 
 paths:
-  quality_root:   'C:\Users\us\Desktop\품질_전체'
-  backup_root:    'C:\Users\us\Desktop\개인\클로드 자동 연동'
-  photo_inbox:    'C:\Users\us\Desktop\사진_품질_임시'
-  photo_sort_root: 'C:\Users\us\Desktop\사진분류'          # PART 3 입력 루트
-  photo_backup_root: 'C:\Users\us\Desktop\사진백업'         # PART 3 원본 보관
-  state_dir:      'C:\Users\us\Desktop\개인\클로드 자동 연동\상태'
+  # 위에서부터 찾아 이 PC 에 있는 것을 쓴다. 환경변수 QUALITY_ROOT 가 있으면 그게 먼저다.
+  quality_root:
+    - 'C:\Users\us\Desktop\품질_전체'      # 회사 PC (실제 운영)
+    - 'E:\품질_전체'                          # 노트북 (개발·시험용)
+
+  backup_root:
+    - 'C:\Users\us\Desktop\개인\클로드 자동 연동'
+    - 'E:\개인\클로드 자동 연동'
+    - '{app_dir}\백업'                        # 둘 다 없으면 프로그램 옆에
+
+  photo_inbox:
+    - 'C:\Users\us\Desktop\사진_품질_임시'
+    - 'E:\사진_품질_임시'
+    - '{app_dir}\사진_임시'
+
+  photo_sort_root:                            # PART 3 입력 루트
+    - 'C:\Users\us\Desktop\사진분류'
+    - 'E:\사진분류'
+    - '{app_dir}\사진분류'
+
+  photo_backup_root:                          # PART 3 원본 보관
+    - 'C:\Users\us\Desktop\사진백업'
+    - 'E:\사진백업'
+    - '{app_dir}\사진백업'
+
+  state_dir:
+    - 'C:\Users\us\Desktop\개인\클로드 자동 연동\상태'
+    - 'E:\개인\클로드 자동 연동\상태'
+    - '{app_dir}\상태'
 
 files:
   supply_check:   '{quality_root}\G. 자재\03. 자재검수요청서\★수불부 체크용.xlsx'

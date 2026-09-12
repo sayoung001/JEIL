@@ -8,6 +8,6 @@ if not exist .venv (
 ) else (
     call .venv\Scripts\activate
 )
-if not exist config.yaml copy config.example.yaml config.yaml
+REM config.yaml 은 없으면 프로그램이 알아서 만든다
 python main.py
 pause

@@ -18,6 +18,7 @@ from core.ledger import LedgerEntry, LedgerTemplate, LedgerWriter
 from core.models import Series, ShapeTest
 from core.numbering import (기준문자열, 대장_구분표기, 서명줄, 시험번호, 판정_겉모양,
                             판정표기, parse_시험번호)
+from core.paths import resource
 from core.sheets import col_letter
 
 from .base import Task
@@ -173,4 +174,5 @@ class PhcShapeTask(Task):
 
 
 def _template_path(rel: str) -> Path:
-    return Path(__file__).resolve().parent.parent / "templates" / rel
+    """exe 안에 구워 넣은 템플릿. exe 옆에 같은 이름이 있으면 그쪽이 우선한다."""
+    return resource("templates", *rel.split("/"))

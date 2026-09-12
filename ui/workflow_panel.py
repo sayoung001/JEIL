@@ -11,6 +11,7 @@ from typing import Any
 import yaml
 from PySide6.QtWidgets import QCheckBox, QGroupBox, QLabel, QVBoxLayout, QWidget
 
+from core.paths import resource
 from core.state import State
 
 
@@ -63,8 +64,7 @@ class WorkflowPanel(QWidget):
     # -----------------------------------------------------------------
     def load(self, workflow_file: str, task_name: str, 회차: Any,
              values: dict[str, Any] | None = None) -> None:
-        base = Path(__file__).resolve().parent.parent / "workflows"
-        self.workflow = Workflow.load(base / workflow_file)
+        self.workflow = Workflow.load(resource("workflows", workflow_file))
         self.task_name, self.회차 = task_name, 회차
         self.values = values or {}
         self.title.setText(f"{self.workflow.name}  ({회차})")

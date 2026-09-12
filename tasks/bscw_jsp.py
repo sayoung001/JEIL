@@ -11,11 +11,11 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from core.context import TaskContext
 from core.engines import HorizontalBlockWriter
 from core.ledger import LedgerEntry, LedgerTemplate, LedgerWriter
+from core.paths import resource
 from core.models import CompressiveTest, CompStage, Series
 from core.numbering import (TEST_SERIES, 대장_구분표기, 서명줄, 시험번호, 판정표기,
                             parse_시험번호)
@@ -169,8 +169,7 @@ class CompressiveTask(Task):
         lst.write(LIST_FIRST_ROW + data.목록행번호 - 1,
                   self.list_cols["강도28"], data.평균_28일)
 
-        tpl = LedgerTemplate.load(
-            Path(__file__).resolve().parent.parent / "templates" / "현장시험" / "압축강도.yaml")
+        tpl = LedgerTemplate.load(resource("templates", "현장시험", "압축강도.yaml"))
         writer = LedgerWriter(ctx.book("ledger_civil"), tpl)
         writer.append(LedgerEntry(
             날짜=data.완료일,                      # 채취일 + 28 (§15.2)

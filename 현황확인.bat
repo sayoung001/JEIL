@@ -3,6 +3,9 @@ chcp 65001 > nul
 REM 엑셀을 띄우지 않고 현재 상태만 출력한다 (읽기 전용)
 cd /d "%~dp0"
 if exist .venv call .venv\Scripts\activate
+echo ===== 경로 확인 (이 PC 에서 어디를 보고 있는가) =====
+python main.py --paths
+echo.
 echo ===== 파일 현황 =====
 python main.py --dump
 echo.
