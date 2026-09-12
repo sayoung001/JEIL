@@ -1,0 +1,4 @@
+# 배치 파일은 Windows 에서 실행되므로 CRLF 로 받는다
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

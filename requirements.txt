@@ -1,0 +1,11 @@
+# 실행 필수
+PySide6>=6.6
+PyYAML>=6.0
+openpyxl>=3.1        # .xlsx 읽기 전용
+xlrd==2.0.1          # .xls 읽기 전용 (레거시 4개 파일)
+xlwings>=0.31        # 쓰기 전용 (Windows + Excel 필수)
+Pillow>=10.0         # 사진 분류기
+# 선택
+pillow-heif>=0.16    # HEIC 입력을 다룰 때만
+# 빌드
+pyinstaller>=6.0
