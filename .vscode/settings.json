@@ -1,0 +1,26 @@
+{
+  // 가상환경 인터프리터. .venv 를 만들면 VS Code 가 이걸 쓴다.
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+
+  // 테스트 탭(플라스크 아이콘)에서 122개 테스트를 바로 돌릴 수 있다
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["tests"],
+
+  // 한글 파일명·주석이 깨지지 않게
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": false,
+
+  // 터미널을 UTF-8 로 (한글 출력 깨짐 방지)
+  "terminal.integrated.env.windows": {
+    "PYTHONUTF8": "1",
+    "PYTHONIOENCODING": "utf-8"
+  },
+
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/build": true,
+    "**/dist": true
+  }
+}
