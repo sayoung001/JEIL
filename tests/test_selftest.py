@@ -93,3 +93,61 @@ def test_배포_안내문이_함께_간다():
     assert "원본을 넣으세요" in 안내
     for bat in ("처음설정.bat", "자가점검.bat", "build.bat"):
         assert (root / bat).exists(), bat
+
+
+# =====================================================================
+# windowed exe 대응 — 콘솔이 없어도 결과가 남는가
+# =====================================================================
+def test_소스실행에서는_콘솔붙이기를_시도하지_않는다():
+    from core.paths import attach_console
+
+    assert attach_console() is False        # frozen 이 아니면 항상 False
+
+
+def test_CLI_결과가_파일로도_남는다(tmp_path, monkeypatch, capsys):
+    """--windowed exe 는 cmd 에 출력을 못 보낸다. 파일이 유일한 근거가 된다."""
+    import main
+
+    monkeypatch.setattr(main, "app_dir", lambda: tmp_path)
+    monkeypatch.setattr(main, "writable",
+                        lambda *parts: tmp_path.joinpath(*parts))
+    끝 = main._기록시작()
+    print("점검 내용 한 줄")
+    끝()
+
+    남은것 = (tmp_path / "진단결과.txt").read_text(encoding="utf-8")
+    assert "점검 내용 한 줄" in 남은것
+    assert "점검 내용 한 줄" in capsys.readouterr().out    # 화면에도 그대로
+
+
+def test_기록시작은_쓸수없어도_죽지_않는다(monkeypatch):
+    import main
+
+    def 못씀(*a, **kw):
+        raise OSError("읽기 전용")
+
+    monkeypatch.setattr(main, "writable", 못씀)
+    끝 = main._기록시작()
+    print("그래도 돈다")
+    끝()
+
+
+def test_설정이_깨져도_안내한다(tmp_path, monkeypatch):
+    """config.yaml 을 손으로 고치다 깨뜨릴 수 있다."""
+    import main
+
+    깨진것 = tmp_path / "config.yaml"
+    깨진것.write_text("paths: [이건: 목록인데\n  들여쓰기가: 엉망", encoding="utf-8")
+    본것 = {}
+    monkeypatch.setattr(main, "_치명오류",
+                        lambda 제목, 본문: 본것.update(제목=제목, 본문=본문))
+    코드 = main.main(["--config", str(깨진것)])
+    assert 코드 == 2
+    assert "잘못됐습니다" in 본것["제목"]
+    assert "다시 실행하면" in 본것["본문"]
+
+
+def test_배포문서가_진단결과파일을_안내한다():
+    root = Path(__file__).resolve().parent.parent
+    안내 = (root / "배포안내.txt").read_text(encoding="utf-8")
+    assert "진단결과.txt" in 안내

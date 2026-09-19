@@ -26,8 +26,76 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from core.config import check_paths, load_config   # noqa: E402
-from core.paths import app_dir, config_path, describe, writable  # noqa: E402
+from core.paths import (app_dir, attach_console, config_path, describe,
+                        is_frozen, writable)       # noqa: E402
 from core.state import State                       # noqa: E402
+
+#: CLI 결과를 파일로도 남긴다. windowed exe 라 콘솔이 없을 때의 보험이자,
+#: "이 내용을 그대로 알려 주세요" 라고 할 수 있는 근거가 된다.
+진단파일 = "진단결과.txt"
+
+
+class _양쪽(object):
+    """화면과 파일에 동시에 쓴다."""
+
+    def __init__(self, *대상):
+        self._대상 = [t for t in 대상 if t is not None]
+
+    def write(self, text):
+        for t in self._대상:
+            try:
+                t.write(text)
+            except Exception:
+                pass
+        return len(text)
+
+    def flush(self):
+        for t in self._대상:
+            try:
+                t.flush()
+            except Exception:
+                pass
+
+
+def _기록시작():
+    """CLI 모드에서 출력을 진단결과.txt 에도 남긴다. 되돌리는 함수를 돌려준다."""
+    try:
+        f = open(writable(진단파일), "w", encoding="utf-8")
+    except OSError:
+        return lambda: None
+    원래 = sys.stdout
+    sys.stdout = _양쪽(원래, f)
+
+    def 끝():
+        sys.stdout = 원래
+        try:
+            f.close()
+        except Exception:
+            pass
+    return 끝
+
+
+def _치명오류(제목: str, 본문: str) -> None:
+    """창이 뜨기 전에 죽으면 사용자는 아무것도 못 본다. 대화상자로 알린다."""
+    print(f"{제목}\n{본문}", file=sys.stderr)
+    if not is_frozen():
+        return
+    try:
+        from PySide6.QtWidgets import QApplication, QMessageBox
+
+        app = QApplication.instance() or QApplication([])
+        QMessageBox.critical(None, 제목, 본문)
+        del app
+    except Exception:
+        try:                                  # Qt 자체가 안 뜨는 경우
+            import ctypes
+
+            ctypes.windll.user32.MessageBoxW(0, 본문, 제목, 0x10)
+        except Exception:
+            pass
+
+
+log = logging.getLogger("품질자동화")
 
 
 def setup_logging(level: int = logging.INFO) -> None:
@@ -236,7 +304,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 
+    # GUI 가 아닌 모드는 콘솔에 붙어야 출력이 보인다 (windowed exe 대응)
+    CLI = any((args.selftest, args.setup, args.paths, args.intake,
+               args.monthly, args.dump, args.check, args.verify))
+    if CLI:
+        attach_console()
     setup_logging(logging.DEBUG if args.verbose else logging.INFO)
+    기록끝 = _기록시작() if CLI else (lambda: None)
     try:
         cfg = load_config(args.config)
     except FileNotFoundError as e:
@@ -246,30 +320,51 @@ def main(argv: list[str] | None = None) -> int:
             text, 치명 = report(None)
             print(text)
             print(f"\n설정 파일이 없습니다: {e}")
+            기록끝()
             return 1
-        print(e, file=sys.stderr)
-        print(f"\n{describe()}", file=sys.stderr)
+        기록끝()
+        _치명오류("설정 파일을 읽지 못했습니다", f"{e}\n\n{describe()}")
+        return 2
+    except Exception as e:                    # 설정 형식이 깨진 경우
+        기록끝()
+        _치명오류("설정 파일이 잘못됐습니다",
+                  f"{config_path()}\n\n{type(e).__name__}: {e}\n\n"
+                  "메모장으로 열어 형식을 확인하거나, 파일을 지우고 다시 실행하면 "
+                  "예시에서 새로 만들어 줍니다.")
         return 2
     # 상태 파일도 exe 옆에. 내장 폴더에 두면 매번 초기화된다.
     state = State(app_dir() / "state.json")
 
-    if args.monthly:
-        return cmd_monthly(cfg, args.monthly)
-    if args.selftest:
-        return cmd_selftest(cfg)
-    if args.setup:
-        return cmd_setup(cfg)
-    if args.paths:
-        return cmd_paths(cfg)
-    if args.intake:
-        return cmd_intake(cfg, run=args.run)
-    if args.dump:
-        return cmd_dump(cfg)
-    if args.check:
-        return cmd_check(cfg, state)
-    if args.verify:
-        return cmd_verify(cfg, state)
-    return cmd_gui(cfg, state)
+    try:
+        if args.monthly:
+            return cmd_monthly(cfg, args.monthly)
+        if args.selftest:
+            return cmd_selftest(cfg)
+        if args.setup:
+            return cmd_setup(cfg)
+        if args.paths:
+            return cmd_paths(cfg)
+        if args.intake:
+            return cmd_intake(cfg, run=args.run)
+        if args.dump:
+            return cmd_dump(cfg)
+        if args.check:
+            return cmd_check(cfg, state)
+        if args.verify:
+            return cmd_verify(cfg, state)
+    finally:
+        if CLI:
+            print(f"\n(이 내용은 {writable(진단파일)} 에도 저장됐습니다)")
+            기록끝()
+
+    try:
+        return cmd_gui(cfg, state)
+    except Exception as e:                    # 창이 뜨기 전에 죽는 경우
+        log.exception("프로그램을 시작하지 못했습니다")
+        _치명오류("프로그램을 시작하지 못했습니다",
+                  f"{type(e).__name__}: {e}\n\n"
+                  "자가점검.bat 을 실행해 무엇이 빠졌는지 확인하세요.")
+        return 2
 
 
 if __name__ == "__main__":

@@ -83,6 +83,35 @@ def ensure_config() -> tuple[Path, bool]:
     return target, True
 
 
+def attach_console() -> bool:
+    r"""windowed exe 를 부모 콘솔(cmd 창)에 붙인다.
+
+    ``--windowed`` 로 만든 exe 는 콘솔이 없는 프로그램이라, cmd 에서 실행해도
+    ``print`` 출력이 **아무 데도 안 나온다.** 그대로 두면 처음설정.bat 이
+    빈 화면만 보여 주고, 회사 PC 에서 무엇이 잘못됐는지 알 길이 없어진다.
+
+    Windows 의 ``AttachConsole(-1)`` 로 부모 콘솔에 붙은 뒤 표준 출력을
+    다시 연다. 붙을 콘솔이 없으면(탐색기에서 더블클릭) 조용히 False 를 준다.
+    """
+    if not (is_frozen() and sys.platform.startswith("win")):
+        return False
+    try:
+        import ctypes
+
+        ATTACH_PARENT_PROCESS = -1
+        if not ctypes.windll.kernel32.AttachConsole(ATTACH_PARENT_PROCESS):
+            return False
+        for 이름 in ("stdout", "stderr"):
+            try:
+                setattr(sys, 이름, open("CONOUT$", "w", encoding="utf-8",
+                                        buffering=1))
+            except OSError:
+                pass
+        return True
+    except Exception:                       # pragma: no cover - 환경 의존
+        return False
+
+
 def as_path(value: str | Path) -> Path:
     r"""설정에 적힌 경로 문자열을 이 OS 의 Path 로.
 
