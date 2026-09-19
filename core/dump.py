@@ -93,7 +93,7 @@ def _part2(cfg: Config) -> None:
                        ("ledger_outsrc", "N-02 (의뢰시험)")):
         try:
             book = read_book(cfg.path(key))
-        except ReaderError as e:
+        except (ReaderError, KeyError) as e:
             print(f"{label}: 읽지 못했습니다 — {e}")
             continue
         print(f"{label}  시트: {book.sheet_names}")
@@ -139,5 +139,5 @@ def _part2(cfg: Config) -> None:
         nums = sorted(int(n) for n in book.sheet_names if n.isdigit())
         print(f"PHC_MILK   시트 {book.sheet_names}  최신 번호 "
               f"{f'Q-Q-01-{max(nums):02d}' if nums else '없음'}")
-    except ReaderError as e:
+    except (ReaderError, KeyError) as e:
         print(f"PHC_MILK: 읽지 못했습니다 — {e}")

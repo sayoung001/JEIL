@@ -111,7 +111,7 @@ class ConsistencyChecker:
             prefix = TEST_SERIES[series]["prefix"]
             try:
                 book = read_book(self.cfg.path(ledger_key))
-            except ReaderError as e:
+            except (ReaderError, KeyError) as e:
                 out.append(Finding("warn", ledger_key, "-", f"읽지 못했습니다: {e}"))
                 continue
             for name, sh in book.sheets.items():
@@ -129,11 +129,11 @@ class ConsistencyChecker:
         out: list[Finding] = []
         try:
             book = read_book(self.cfg.path("test_bscw_jsp"), data_only=True)
-        except ReaderError as e:
+        except (ReaderError, KeyError) as e:
             return [Finding("warn", "test_bscw_jsp", "-", f"읽지 못했습니다: {e}")]
         try:
             목록 = book.sheet("시험목록")
-        except ReaderError:
+        except (ReaderError, KeyError):
             return out
 
         cols = {Series.BSCW: (1, 2, 3, 4), Series.JSP: (5, 6, 7, 8)}
@@ -173,7 +173,7 @@ class ConsistencyChecker:
         for key in ("ledger_pile", "ledger_civil", "ledger_outsrc"):
             try:
                 book = read_book(self.cfg.path(key))
-            except ReaderError as e:
+            except (ReaderError, KeyError) as e:
                 out.append(Finding("warn", key, "-", f"읽지 못했습니다: {e}"))
                 continue
             for name, sh in book.sheets.items():
@@ -197,7 +197,7 @@ class ConsistencyChecker:
         out: list[Finding] = []
         try:
             book = read_book(self.cfg.path("ledger_civil"))
-        except ReaderError as e:
+        except (ReaderError, KeyError) as e:
             return [Finding("warn", "ledger_civil", "-", f"읽지 못했습니다: {e}")]
         타설일 = self._pour_dates()
         for name, sh in book.sheets.items():
@@ -248,7 +248,7 @@ class ConsistencyChecker:
         for key in ("ledger_civil", "ledger_pile"):
             try:
                 book = read_book(self.cfg.path(key))
-            except ReaderError:
+            except (ReaderError, KeyError):
                 continue
             for name, sh in book.sheets.items():
                 if not _is_month_sheet(name):

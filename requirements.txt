@@ -12,5 +12,9 @@ PyMuPDF>=1.24        # 성적서 PDF 글자 추출 (스캔본은 OCR용 렌더�
 # rapidocr-onnxruntime>=1.3    # 권장: pip 만으로 끝난다 (별도 프로그램 설치 불필요)
 # pillow-heif>=0.16            # HEIC 사진을 직접 다룰 때
 
+# 노트북 (VS Code 에서 셀 단위로 쓸 때)
+# VS Code 가 처음 열 때 설치를 물어보므로 미리 넣지 않아도 된다.
+# ipykernel>=6.29
+
 # 빌드
 pyinstaller>=6.0

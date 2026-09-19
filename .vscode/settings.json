@@ -17,6 +17,11 @@
     "PYTHONIOENCODING": "utf-8"
   },
 
+  // 노트북을 열면 그 폴더가 아니라 프로젝트 루트를 기준으로 삼는다
+  "jupyter.notebookFileRoot": "${workspaceFolder}",
+  // 실행 결과를 커밋하지 않는다 (현장 데이터가 저장소에 남지 않게)
+  "notebook.output.textLineLimit": 60,
+
   "files.exclude": {
     "**/__pycache__": true,
     "**/.pytest_cache": true,
