@@ -141,3 +141,33 @@ def test_워크플로우_자리표시자가_채워진다(app, tmp_path):
     assert any("0905 시트" in t for t in texts)
     assert any("QG03-13 260905" in h for h in hints)     # 힌트는 툴팁으로 간다
     assert not any("{" in t for t in texts)
+
+
+def test_서류투입_화면이_뜬다(app, tmp_path):
+    from core.config import Config
+    from ui.forms.intake_form import IntakeForm
+
+    c = cfg()
+    raw = dict(c.raw)
+    raw["paths"] = dict(raw["paths"])
+    raw["paths"]["intake_root"] = str(tmp_path / "서류투입")
+    form = IntakeForm(Config(raw=raw))
+    form.preview()                                # 폴더가 없어도 죽지 않는다
+    assert "투입 폴더가 없습니다" in form.notes.toPlainText()
+    assert form.btn_ledger.isEnabled() is False   # 고른 성적서가 없으면 잠겨 있다
+
+
+def test_메인창에_서류투입_탭이_있다(app, tmp_path):
+    from core.config import Config
+    from core.state import State
+    from ui.main_window import MainWindow
+
+    c = cfg()
+    raw = dict(c.raw)
+    raw["paths"] = dict(raw["paths"])
+    raw["paths"]["state_dir"] = str(tmp_path / "상태")
+    raw["paths"]["intake_root"] = str(tmp_path / "서류투입")
+    win = MainWindow(Config(raw=raw), State(tmp_path / "state.json"))
+    win.task_list.setCurrentRow(win.ROW_INTAKE)
+    assert win.stack.currentIndex() == win.ROW_INTAKE
+    win.close()

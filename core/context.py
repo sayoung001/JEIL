@@ -18,6 +18,7 @@ from typing import Any
 from .config import Config
 from .excel_reader import read_book
 from .excel_writer import ExcelSession
+from .paths import as_path
 from .sheets import MemorySheet, MemoryWorkbook, WorkbookPort, WriteRecord
 
 log = logging.getLogger(__name__)
@@ -57,13 +58,13 @@ class TaskContext(ABC):
     def book(self, file_key: str) -> WorkbookPort:
         """config 의 files.<key> 로 통합문서를 연다. 같은 키는 한 번만 연다."""
         if file_key not in self._opened:
-            path = Path(self.cfg.path(file_key))
+            path = as_path(self.cfg.path(file_key))
             self._opened[file_key] = self._open(path)
             log.info("열기(%s): %s", "미리보기" if self.is_preview else "쓰기", path.name)
         return self._opened[file_key]
 
     def path(self, file_key: str) -> Path:
-        return Path(self.cfg.path(file_key))
+        return as_path(self.cfg.path(file_key))
 
     @property
     def open_keys(self) -> list[str]:
@@ -128,7 +129,7 @@ class PreviewContext(TaskContext):
     def plans(self) -> list[PlannedWrite]:
         out: list[PlannedWrite] = []
         for key, wb in self._opened.items():
-            label = Path(self.cfg.path(key)).name
+            label = as_path(self.cfg.path(key)).name
             if isinstance(wb, MemoryWorkbook):
                 for rec in wb.records():
                     out.append(PlannedWrite.from_record(label, rec))

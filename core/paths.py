@@ -15,6 +15,7 @@
 """
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -80,6 +81,22 @@ def ensure_config() -> tuple[Path, bool]:
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(example, target)
     return target, True
+
+
+def as_path(value: str | Path) -> Path:
+    r"""설정에 적힌 경로 문자열을 이 OS 의 Path 로.
+
+    설정은 Windows 기준이라 ``C:\품질_전체\G. 자재`` 처럼 역슬래시를 쓴다.
+    Windows 에서는 그대로 쓰면 되지만, 그 밖(테스트·점검용 리눅스)에서는
+    역슬래시가 구분자로 취급되지 않아 **전체가 파일명 하나**가 돼 버린다.
+    실제 동작은 Windows 에서만 하지만, 검증을 다른 OS 에서도 하려면 여기서 맞춰 준다.
+    """
+    if isinstance(value, Path):
+        return value
+    text = str(value)
+    if os.sep != "\\":
+        text = text.replace("\\", os.sep)
+    return Path(text)
 
 
 def describe() -> str:

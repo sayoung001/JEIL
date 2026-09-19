@@ -25,6 +25,8 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Iterable
 
+from core.paths import as_path
+
 log = logging.getLogger(__name__)
 
 DEFAULT_IGNORE = ("Thumbs.db", "desktop.ini", ".DS_Store")
@@ -87,15 +89,15 @@ def load_config(cfg: Any) -> PhotoConfig:
     cats = [
         Category(
             name=c["name"],
-            dest=Path(c["dest"]),
+            dest=as_path(c["dest"]),
             folder_fmt=c.get("folder_fmt"),
             require_sub=bool(c.get("require_sub", False)),
         )
         for c in photo.get("categories", [])
     ]
     return PhotoConfig(
-        input_root=Path(cfg.path("photo_sort_root")),
-        backup_root=Path(cfg.path("photo_backup_root")),
+        input_root=as_path(cfg.path("photo_sort_root")),
+        backup_root=as_path(cfg.path("photo_backup_root")),
         categories=cats,
         max_edge=int(photo.get("max_edge", 1600)),
         jpeg_quality=int(photo.get("jpeg_quality", 85)),

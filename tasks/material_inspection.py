@@ -20,6 +20,7 @@ from core.excel_reader import read_book
 from core.models import InspectionRound
 from core.numbering import (검수결과_표기, 서명란, 요청서_문서번호, 통보서_문서번호,
                             통보일_문자열)
+from core.paths import as_path
 from core.sheets import col_letter
 from core.util import as_date, as_number, has_zip_entry
 
@@ -68,7 +69,7 @@ class MaterialInspectionTask(Task):
     def __init__(self, cfg, 사진대지: bool = True):
         super().__init__(cfg)
         # 사진대지 시트 생성은 선택 단계다 (§5.1 9번). 양식 파일이 없으면 알아서 빠진다.
-        self.사진대지 = 사진대지 and Path(cfg.path("photo_template")).exists()
+        self.사진대지 = 사진대지 and as_path(cfg.path("photo_template")).exists()
 
     @property
     def target_files(self) -> tuple[str, ...]:

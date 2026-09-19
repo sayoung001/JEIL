@@ -30,6 +30,7 @@ from typing import Any
 from .config import Config
 from .excel_reader import ReaderError, read_book
 from .numbering import parse_시험번호
+from .paths import as_path
 from .util import as_date, as_number, json_default
 
 log = logging.getLogger(__name__)
@@ -277,7 +278,7 @@ class DueChecker:
     def _dump(self, alerts: Alerts) -> None:
         """GUI 가 꺼져 있어도 마지막 판정 결과가 남게 한다 (§16.0)."""
         try:
-            folder = Path(self.cfg.path("state_dir"))
+            folder = as_path(self.cfg.path("state_dir"))
             folder.mkdir(parents=True, exist_ok=True)
             (folder / "alerts.json").write_text(
                 json.dumps(alerts.to_dict(), ensure_ascii=False, indent=2,

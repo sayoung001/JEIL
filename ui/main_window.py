@@ -26,6 +26,7 @@ from core.due_checker import DueChecker
 from core.state import State
 from tasks.material_inspection import MaterialInspectionTask
 
+from .forms.intake_form import IntakeForm
 from .forms.material_form import MaterialInspectionForm
 from .forms.photo_form import PhotoSortForm
 from .forms.test_form import TestForm
@@ -64,6 +65,7 @@ class MainWindow(QMainWindow):
             ("▸ 자재검수 (PHC파일)", True),
             ("▸ 사진 분류", True),
             ("▸ 시험 (겉모양·밀크·압축강도)", True),
+            ("▸ 서류 투입 (원본 → 분류·추출)", True),
             ("── 2차 예정 ──", False),
             ("▹ 철근", False),
             ("▹ 레미콘", False),
@@ -92,6 +94,12 @@ class MainWindow(QMainWindow):
         row.addWidget(check)
         lv.addLayout(row)
 
+        selftest = QPushButton("자가 점검")
+        selftest.setToolTip("이 PC 에서 프로그램이 제대로 돌 수 있는지 확인합니다.\n"
+                            "새 PC 로 옮긴 직후에 한 번 눌러 보세요.")
+        selftest.clicked.connect(self.show_selftest)
+        lv.addWidget(selftest)
+
         paths = QPushButton("경로 확인")
         paths.setToolTip("이 PC 에서 어느 폴더·파일을 보고 있는지 확인합니다.\n"
                          "다른 PC 로 옮겼을 때 가장 먼저 눌러 보세요.")
@@ -106,9 +114,11 @@ class MainWindow(QMainWindow):
         self.material_form = MaterialInspectionForm(self.cfg)
         self.photo_form = PhotoSortForm(self.cfg)
         self.test_form = TestForm(self.cfg)
+        self.intake_form = IntakeForm(self.cfg)
         self.stack.addWidget(self.material_form)
         self.stack.addWidget(self.photo_form)
         self.stack.addWidget(self.test_form)
+        self.stack.addWidget(self.intake_form)
         cv.addWidget(self.stack, 1)
 
         self.preview_table = QTableWidget(0, 5)
@@ -150,10 +160,10 @@ class MainWindow(QMainWindow):
 
     # =================================================================
     #: 태스크 목록 행 -> 입력 폼
-    ROW_MATERIAL, ROW_PHOTO, ROW_TEST = 0, 1, 2
+    ROW_MATERIAL, ROW_PHOTO, ROW_TEST, ROW_INTAKE = 0, 1, 2, 3
 
     def _on_task_changed(self, row: int) -> None:
-        self.stack.setCurrentIndex(min(max(row, 0), 2))
+        self.stack.setCurrentIndex(min(max(row, 0), 3))
         if row == self.ROW_MATERIAL:
             self.workflow.load("자재검수.yaml", "자재검수",
                                self.material_form.차수(), self.material_form.values())
@@ -211,6 +221,8 @@ class MainWindow(QMainWindow):
     # -- 미리보기 / 실행 ---------------------------------------------------
     def _current(self) -> tuple[Any, Any]:
         row = self.task_list.currentRow()
+        if row == self.ROW_INTAKE:
+            raise ValueError("서류 투입은 [미리보기] 와 [실행] 으로 씁니다.")
         if row == self.ROW_MATERIAL:
             return MaterialInspectionTask(self.cfg), self.material_form.build()
         if row == self.ROW_TEST:
@@ -220,6 +232,9 @@ class MainWindow(QMainWindow):
     def on_preview(self) -> None:
         if self.task_list.currentRow() == self.ROW_PHOTO:
             self.photo_form.preview()
+            return
+        if self.task_list.currentRow() == self.ROW_INTAKE:
+            self.intake_form.preview()
             return
         try:
             task, data = self._current()
@@ -240,6 +255,10 @@ class MainWindow(QMainWindow):
     def on_run(self) -> None:
         if self.task_list.currentRow() == self.ROW_PHOTO:
             self.photo_form.run()
+            self.refresh_alerts()
+            return
+        if self.task_list.currentRow() == self.ROW_INTAKE:
+            self.intake_form.run()
             self.refresh_alerts()
             return
         try:
@@ -324,6 +343,22 @@ class MainWindow(QMainWindow):
                                 "\n".join(f"복원: {p.name}" for p in restored))
         self.refresh_alerts()
 
+    # -- 자가 점검 (새 PC 첫 실행) --------------------------------------------
+    def show_selftest(self) -> None:
+        from core.selftest import report
+
+        text, 치명 = report(self.cfg)
+        box = QMessageBox(self)
+        box.setWindowTitle("자가 점검")
+        if 치명:
+            box.setIcon(QMessageBox.Warning)
+            box.setText(f"해결해야 할 항목이 {치명}건 있습니다.")
+        else:
+            box.setIcon(QMessageBox.Information)
+            box.setText("이 PC 에서 쓸 준비가 됐습니다.")
+        box.setDetailedText(text)
+        box.exec()
+
     # -- 경로 확인 (PC 가 바뀌었을 때) ---------------------------------------
     def show_paths(self) -> None:
         lines, problems = check_paths(self.cfg)
@@ -337,7 +372,10 @@ class MainWindow(QMainWindow):
         else:
             box.setIcon(QMessageBox.Information)
             box.setText("모든 경로를 찾았습니다. 바로 쓸 수 있습니다.")
-        box.setDetailedText("\n".join(lines) + "\n\n■ 문제\n"
+        from core.ocr import describe as ocr_describe
+
+        box.setDetailedText("\n".join(lines) + "\n\n" + ocr_describe()
+                            + "\n\n■ 문제\n"
                             + ("\n".join(f"- {p}" for p in problems) or "없음"))
         box.exec()
 
