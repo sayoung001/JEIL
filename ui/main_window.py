@@ -28,6 +28,7 @@ from tasks.material_inspection import MaterialInspectionTask
 
 from .forms.intake_form import IntakeForm
 from .forms.material_form import MaterialInspectionForm
+from .forms.monthly_form import MonthlyForm
 from .forms.photo_form import PhotoSortForm
 from .forms.test_form import TestForm
 from .workflow_panel import WorkflowPanel
@@ -66,6 +67,7 @@ class MainWindow(QMainWindow):
             ("▸ 사진 분류", True),
             ("▸ 시험 (겉모양·밀크·압축강도)", True),
             ("▸ 서류 투입 (원본 → 분류·추출)", True),
+            ("▸ 월간 실적보고서", True),
             ("── 2차 예정 ──", False),
             ("▹ 철근", False),
             ("▹ 레미콘", False),
@@ -115,10 +117,12 @@ class MainWindow(QMainWindow):
         self.photo_form = PhotoSortForm(self.cfg)
         self.test_form = TestForm(self.cfg)
         self.intake_form = IntakeForm(self.cfg)
+        self.monthly_form = MonthlyForm(self.cfg)
         self.stack.addWidget(self.material_form)
         self.stack.addWidget(self.photo_form)
         self.stack.addWidget(self.test_form)
         self.stack.addWidget(self.intake_form)
+        self.stack.addWidget(self.monthly_form)
         cv.addWidget(self.stack, 1)
 
         self.preview_table = QTableWidget(0, 5)
@@ -160,13 +164,16 @@ class MainWindow(QMainWindow):
 
     # =================================================================
     #: 태스크 목록 행 -> 입력 폼
-    ROW_MATERIAL, ROW_PHOTO, ROW_TEST, ROW_INTAKE = 0, 1, 2, 3
+    ROW_MATERIAL, ROW_PHOTO, ROW_TEST, ROW_INTAKE, ROW_MONTHLY = 0, 1, 2, 3, 4
 
     def _on_task_changed(self, row: int) -> None:
-        self.stack.setCurrentIndex(min(max(row, 0), 3))
+        self.stack.setCurrentIndex(min(max(row, 0), 4))
         if row == self.ROW_MATERIAL:
             self.workflow.load("자재검수.yaml", "자재검수",
                                self.material_form.차수(), self.material_form.values())
+        elif row == self.ROW_MONTHLY:
+            self.workflow.load("실적보고서.yaml", "실적보고서",
+                               self.monthly_form.월, {"월": self.monthly_form.월})
         elif row == self.ROW_TEST:
             self.workflow.load(self.test_form.workflow_file(),
                                self.test_form.series.value,
@@ -221,8 +228,8 @@ class MainWindow(QMainWindow):
     # -- 미리보기 / 실행 ---------------------------------------------------
     def _current(self) -> tuple[Any, Any]:
         row = self.task_list.currentRow()
-        if row == self.ROW_INTAKE:
-            raise ValueError("서류 투입은 [미리보기] 와 [실행] 으로 씁니다.")
+        if row in (self.ROW_INTAKE, self.ROW_MONTHLY):
+            raise ValueError("이 태스크는 [미리보기] 와 [실행] 으로 씁니다.")
         if row == self.ROW_MATERIAL:
             return MaterialInspectionTask(self.cfg), self.material_form.build()
         if row == self.ROW_TEST:
@@ -235,6 +242,9 @@ class MainWindow(QMainWindow):
             return
         if self.task_list.currentRow() == self.ROW_INTAKE:
             self.intake_form.preview()
+            return
+        if self.task_list.currentRow() == self.ROW_MONTHLY:
+            self.monthly_form.preview()
             return
         try:
             task, data = self._current()
@@ -260,6 +270,9 @@ class MainWindow(QMainWindow):
         if self.task_list.currentRow() == self.ROW_INTAKE:
             self.intake_form.run()
             self.refresh_alerts()
+            return
+        if self.task_list.currentRow() == self.ROW_MONTHLY:
+            self.monthly_form.run()
             return
         try:
             task, data = self._current()

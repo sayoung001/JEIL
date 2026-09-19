@@ -171,3 +171,34 @@ def test_메인창에_서류투입_탭이_있다(app, tmp_path):
     win.task_list.setCurrentRow(win.ROW_INTAKE)
     assert win.stack.currentIndex() == win.ROW_INTAKE
     win.close()
+
+
+def test_실적보고서_화면이_뜬다(app, tmp_path):
+    from core.config import Config
+    from ui.forms.monthly_form import MonthlyForm
+
+    c = cfg()
+    raw = dict(c.raw)
+    raw["files"] = dict(raw["files"])
+    for k in ("ledger_pile", "ledger_civil", "ledger_outsrc", "ledger_load_mt"):
+        raw["files"][k] = str(tmp_path / f"{k}.xlsx")     # 없는 파일
+    form = MonthlyForm(Config(raw=raw))
+    form.preview()                                        # 대장이 없어도 죽지 않는다
+    assert form.table.rowCount() == 0
+    assert form.notes.toPlainText()
+
+
+def test_메인창에_실적보고서_탭이_있다(app, tmp_path):
+    from core.config import Config
+    from core.state import State
+    from ui.main_window import MainWindow
+
+    c = cfg()
+    raw = dict(c.raw)
+    raw["paths"] = dict(raw["paths"])
+    raw["paths"]["state_dir"] = str(tmp_path / "상태")
+    raw["paths"]["intake_root"] = str(tmp_path / "서류투입")
+    win = MainWindow(Config(raw=raw), State(tmp_path / "state.json"))
+    win.task_list.setCurrentRow(win.ROW_MONTHLY)
+    assert win.stack.currentIndex() == win.ROW_MONTHLY
+    win.close()

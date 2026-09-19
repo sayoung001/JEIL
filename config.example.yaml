@@ -68,6 +68,8 @@ files:
   ledger_load_mt: '{quality_root}\P. 감리단\03,04. 품질시험 검사대장(건축,토목,의뢰시험)\O-01,04 품질검사 실시대장(재하,MT).xls'
   # 재하·MT 사내 현황 (진단 PART A §2 ④)
   status_load_mt: '{quality_root}\N. 의뢰시험\PHC파일_재하,MT 현황.xlsx'
+  # 월간 실적보고서 (진단 PART D 1순위)
+  report_monthly: '{quality_root}\P. 감리단\02. 품질검사 실적보고서\윤재웅 실적총괄.xlsx'
 
 test_rules:
   phc_shape:                    # T-03 겉모양·치수 (§16.0)

@@ -6,6 +6,7 @@
     품질자동화.exe --paths    이 PC 에서 어느 폴더를 보고 있는지 (경로 문제 1순위)
     품질자동화.exe --intake   서류투입 폴더를 훑어 무엇이 어디로 갈지 보여 준다
     품질자동화.exe --intake --run   실제로 분류한다
+    품질자동화.exe --monthly 26.08   월간 실적보고서 집계 (Excel 불필요, 읽기 전용)
     품질자동화.exe --dump     읽기 전용 현황 덤프 (Excel 불필요)
     품질자동화.exe --check    시험 도래 판정만 (배지 내용)
     품질자동화.exe --verify   정합성 검사 (§21.3)
@@ -103,6 +104,38 @@ def cmd_verify(cfg, state) -> int:
     return 1 if errors else 0
 
 
+def cmd_monthly(cfg, 월: str) -> int:
+    """실시대장을 세어 월간 실적을 보여 준다. 파일을 수정하지 않는다."""
+    from core.monthly_report import MonthlyReporter
+
+    reporter = MonthlyReporter(cfg)
+    있는달 = reporter.있는_달()
+    if 월 not in 있는달:
+        print(f"대장에 {월} 기록이 없습니다.")
+        print(f"  있는 달: {', '.join(있는달) if 있는달 else '없음'}")
+        if not 있는달:
+            return 1
+
+    전월, 금월 = reporter.누계(월)
+    누계 = 전월.더하기(금월)
+
+    print(f"■ {월} 금월 실적")
+    print(금월)
+    print(f"\n■ 누계 (전월까지 {전월.총건수}건 + 금월 {금월.총건수}건)")
+    print(누계)
+
+    경고 = [*dict.fromkeys([*전월.경고, *금월.경고])]
+    if 경고:
+        print("\n■ 확인 필요")
+        for w in 경고:
+            print(f"  - {w}")
+
+    print("\n출처 (대장!시트!행)")
+    for 이름, 값 in sorted(금월.종목.items()):
+        print(f"  {이름}: {', '.join(값.출처[:6])}" + (" …" if len(값.출처) > 6 else ""))
+    return 0
+
+
 def cmd_selftest(cfg) -> int:
     """회사 PC 처럼 아무것도 없는 곳에서 무엇이 빠졌는지 스스로 말한다."""
     from core.selftest import report
@@ -191,6 +224,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", default=None,
                         help=f"설정 파일 (기본: {config_path()})")
     parser.add_argument("--paths", action="store_true", help="보고 있는 폴더·파일 확인")
+    parser.add_argument("--monthly", metavar="YY.MM",
+                        help="월간 실적보고서 집계 (예: 26.08)")
     parser.add_argument("--selftest", action="store_true", help="이 PC 에서 돌 수 있는지 점검")
     parser.add_argument("--setup", action="store_true", help="서류투입 폴더 만들기")
     parser.add_argument("--intake", action="store_true", help="서류투입 폴더 훑기")
@@ -218,6 +253,8 @@ def main(argv: list[str] | None = None) -> int:
     # 상태 파일도 exe 옆에. 내장 폴더에 두면 매번 초기화된다.
     state = State(app_dir() / "state.json")
 
+    if args.monthly:
+        return cmd_monthly(cfg, args.monthly)
     if args.selftest:
         return cmd_selftest(cfg)
     if args.setup:
