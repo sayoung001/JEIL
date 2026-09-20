@@ -1,0 +1,12 @@
+config.yaml
+__pycache__/
+*.pyc
+logs/
+state.json
+테스트_사본/
+build/
+dist/
+*.spec
+.pytest_cache/
+C:/
+진단결과.txt

@@ -1,0 +1,16 @@
+name: PHC 겉모양·치수 시험 (Q-Q-02)
+auto:
+  - 백업
+  - 601 일지 신규 블록 생성 + 인쇄영역 이동
+  - 601 대장 1행 추가
+  - Q-01,02 실시대장 5행 그룹 추가
+manual:
+  - id: photo
+    text: "겉모양·치수 사진 정리"
+    hint: "사진분류\\PHC_겉모양\\{YYYYMMDD}_{업체} 폴더에 넣고 [사진 분류] 실행"
+  - id: journal_photo
+    text: "601 `사진` 시트에 사진 붙이기"
+  - id: print_pdf
+    text: "일지 인쇄 → PDF 저장"
+  - id: send
+    text: "감리단 확인·서명"

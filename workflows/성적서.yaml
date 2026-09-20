@@ -1,0 +1,17 @@
+name: 성적서 대장 기입 (재하 · MT)
+auto:
+  - 백업
+  - 성적서 PDF 글자 추출 (텍스트 레이어 우선)
+  - O-01,04 실시대장 행 추가
+manual:
+  - id: verify
+    text: "읽어낸 값이 성적서와 맞는지 눈으로 확인"
+    hint: "성적서번호 · 동/말뚝번호 · 허용지지력. 틀리면 대장이 틀어진다"
+  - id: status_sheet
+    text: "PHC파일_재하,MT 현황.xlsx 에 기입"
+    hint: "항타일지(재하) / 용접이음부 검사현황(MT) 시트"
+  - id: file_pdf
+    text: "성적서 PDF 보관 위치 확인"
+    hint: "N\\02. 의뢰시험 성적서 — 사본 중복에 주의 (진단 PART B §4)"
+  - id: monthly
+    text: "월간 실적보고서 집계에 반영"
