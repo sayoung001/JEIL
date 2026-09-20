@@ -17,13 +17,16 @@ call .venv\Scripts\activate
 echo [2/4] 의존성을 설치합니다...
 pip install -r requirements.txt
 
-REM OCR 을 함께 넣으려면 아래 주석을 풀고 --hidden-import 도 푼다.
+REM OCR 을 함께 넣으려면 아래 pip 주석과 exclude-module 줄을 함께 푼다.
 REM 성적서 PDF 는 텍스트 레이어가 있어 OCR 없이 읽히므로 기본은 빼 둔다 (exe 가 가벼워진다).
 REM pip install rapidocr-onnxruntime
 
 echo [3/4] exe 를 만듭니다...
 REM --add-data 로 넣은 것은 exe 안에 구워진다 (읽기 전용).
 REM config.yaml 은 절대 넣지 않는다 — PC 마다 달라야 하므로 exe 옆에 두고 읽는다.
+REM
+REM hidden-import 는 함수 안에서 늦게 부르는 것들이다. PyInstaller 가 대개 찾아내지만
+REM (리눅스 시험 빌드로 확인) 빠지면 exe 에서만 터지므로 못박아 둔다.
 pyinstaller --noconfirm --clean ^
     --onefile --windowed ^
     --name 품질자동화 ^
@@ -32,6 +35,9 @@ pyinstaller --noconfirm --clean ^
     --add-data "config.example.yaml;." ^
     --hidden-import xlwings ^
     --hidden-import pymupdf ^
+    --hidden-import xlrd ^
+    --hidden-import openpyxl ^
+    --hidden-import PIL ^
     --collect-binaries pymupdf ^
     --exclude-module pytest ^
     --exclude-module rapidocr_onnxruntime ^
@@ -40,6 +46,11 @@ pyinstaller --noconfirm --clean ^
 if errorlevel 1 (
     echo.
     echo !! 빌드에 실패했습니다. 위 메시지를 확인하세요.
+    echo.
+    echo  자주 있는 원인
+    echo   - 한글 exe 이름 문제  -^> --name quality 로 바꾸고 아래 copy 줄도 함께 수정
+    echo   - cryptography / pypdf 충돌  -^> --exclude-module 로 빼고 다시 시도
+    echo   - 백신이 막는 경우  -^> dist 폴더를 예외로 등록
     pause
     exit /b 1
 )

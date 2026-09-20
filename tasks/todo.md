@@ -44,16 +44,24 @@ Windows + Excel 이 있는 현장 PC 에서 아래를 반드시 한 번 거쳐�
 
 ### exe 배포 확인 (노트북 빌드 → 회사 PC 실행)
 
-> **빌드 자체는 아직 한 번도 돌려보지 못했다.** PyInstaller 는 Windows 에서만
-> 돌고 이 작업 환경은 리눅스다. 코드·설정·배포 파일은 다 준비됐지만
-> **빌드가 성공하는지는 노트북에서 직접 확인해야 한다.**
+> **리눅스에서 같은 옵션으로 빌드를 돌려 확인했다** (2026-09-20).
+> 96MB 단일 실행파일이 나왔고, **파이썬이 전혀 없는 환경**에서
+> `--selftest` · `--paths` · `--setup` · `--monthly` · `--dump` · `--check` ·
+> `--verify` · `--intake` 와 GUI 기동까지 전부 정상이었다.
 >
-> 처음 빌드에서 걸릴 만한 곳:
-> - PyMuPDF·PySide6 의 바이너리가 안 딸려 오는 경우
->   -> exe 실행 후 `--selftest` 에서 X 로 잡힌다
-> - `--name 품질자동화` 의 한글 때문에 실패하면 `--name quality` 로 바꾼다
->   (배포 파일들의 exe 이름도 같이 바꿔야 한다)
-> - 백신이 PyInstaller exe 를 막는 경우 — 예외 등록이 필요할 수 있다
+> 확인된 것 (Windows 에서도 같게 동작할 부분)
+> - `workflows` · `templates` · `config.example.yaml` 이 번들에 들어간다
+> - 함수 안에서 늦게 부르는 `pymupdf` · `PIL` · `xlrd` 가 잡힌다
+> - exe 옆에 `config.yaml` · `logs\` · `진단결과.txt` 가 생기고 다음 실행까지 남는다
+> - 내장 자원은 임시폴더(`_MEI...`)에서 읽는다
+>
+> **Windows 빌드는 여전히 미확인이다.** 남은 위험은 Windows 전용 부분뿐이다.
+> - `--windowed` 는 리눅스에서 의미가 없어 이번 시험 빌드에서 빠졌다.
+>   콘솔 붙이기(`AttachConsole`)는 Windows 에서만 확인 가능하다.
+> - `--name 품질자동화` 의 한글이 문제되면 `--name quality` 로 바꾸고
+>   배포 파일들의 exe 이름도 같이 바꾼다 (build.bat 의 안내 참고)
+> - 백신이 PyInstaller exe 를 막는 경우 — dist 폴더 예외 등록
+> - xlwings 는 Windows 전용이라 이번 시험에서 X 로 남았다. 노트북에서는 O 가 떠야 한다.
 
 - [ ] 노트북에서 `build.bat` 실행 → `dist\품질자동화.exe` 생성
 - [ ] 노트북에서 exe 실행 → `E:\품질_전체` 를 고르는지 ([경로 확인] 전부 O)

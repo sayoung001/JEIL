@@ -236,8 +236,9 @@ GUI 없이 한 단계씩 확인하며 쓰려면 `notebooks/01_시작하기.ipynb
                   품질자동화.exe 더블클릭
 ```
 
-> **빌드는 Windows 에서만 된다.** 이 저장소의 코드·설정·배포 파일은 준비됐지만
-> `build.bat` 자체는 노트북에서 한 번 돌려 확인해야 한다 (`tasks/todo.md` 참고).
+> **번들 구성은 리눅스 시험 빌드로 확인했다.** 파이썬이 없는 환경에서 CLI 전부와
+> GUI 기동이 정상이었고, 내장 자원·늦은 import·exe 옆 파일 생성까지 확인했다.
+> **Windows 빌드 자체는 노트북에서 한 번 돌려야 한다** (`tasks/todo.md` 참고).
 
 ### 노트북(.ipynb)은 exe 에 들어가지 않는다
 
@@ -380,7 +381,7 @@ python main.py --verify   # 정합성 검사 (§21.3)
 ## 테스트
 
 ```bash
-python -m pytest tests -q      # Excel 없이 223개 전부 통과
+python -m pytest tests -q      # Excel 없이 236개 전부 통과
 ```
 
 무엇을 검증하는지:
